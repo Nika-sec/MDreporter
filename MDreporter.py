@@ -14,18 +14,18 @@ def read_md_file(file_path):
         # 使用UTF-8编码打开文件
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
-            print("[+]读取{"+file_path+"}成功")
+            print("[+] 读取{"+file_path+"}成功")
             #print(content)
             return content
     except Exception as e:
-        print(f"读取文件失败: {str(e)}")
+        print(f"[-] 读取文件失败: {str(e)}")
         return None
 
 
 def parse_md_string(md_string):
     # 初始化结果字典
     result = {
-        '任务信息': {
+        '测试目标': {
             '公司名称': '',
             '系统名称': '',
             '域名': '',
@@ -51,22 +51,22 @@ def parse_md_string(md_string):
         title = lines[0].strip()
         content = '\n'.join(lines[1:]).strip()
 
-        if title == '任务信息':
-            print("[+]开始读取任务信息")
+        if title == '测试目标':
+            print("[+] 开始读取测试目标")
             # 提取表格内容
             table_pattern = r'\|\s*(.*?)\s*\|\s*(.*?)\s*\|'
             matches = re.findall(table_pattern, content)
             for key, value in matches:
                 if key in ['公司名称', '系统名称', '域名', '漏洞名称', '漏洞URL', '危害级别', '日期', '测试人员']:
                     if value == '':
-                        print("[-]"+key+'缺失')
+                        print("[-] "+key+'缺失')
                     #print(key+":"+value)
-                    result['任务信息'][key] = value
+                    result['测试目标'][key] = value
 
 
 
-        elif title == result.get('任务信息', {}).get('漏洞名称'):
-            print("[+]正在读取漏洞复现过程")
+        elif title == result.get('测试目标', {}).get('漏洞名称'):
+            print("[+] 正在读取漏洞复现过程")
             # 提取URL内容（标题后的第一部分文本）
             code_block = ''
             body_content = ''
@@ -92,12 +92,14 @@ def parse_md_string(md_string):
                 body_content = re.sub(r'\n{2,}','\n',body_content)
                 # 去掉分割符
                 body_content = body_content.replace("---", "")
+            else:
+                body_content = content
 
 
             result['漏洞详情']['数据包'] = code_block
             result['漏洞详情']['复现过程'] = body_content
             if result['漏洞详情']['数据包'] != '' and result['漏洞详情']['复现过程']:
-                print("[+]读取到数据包和复现过程")
+                print("[+] 读取到数据包和复现过程")
 
     #print(result)
     return result
@@ -108,7 +110,7 @@ def find_vulnerability_in_excel(result, excel_file_path):
     在Excel文件中查找漏洞名称并返回对应行的内容
 
     参数:
-    result (dict): 包含任务信息的字典，通过parse_md_string函数生成
+    result (dict): 包含测试目标的字典，通过parse_md_string函数生成
     excel_file_path (str): Excel文件的路径
 
     返回:
@@ -117,15 +119,15 @@ def find_vulnerability_in_excel(result, excel_file_path):
     # 读取Excel文件
     try:
         df = pd.read_excel(excel_file_path)
-        print("[+]读取{"+excel_file_path+"}成功")
+        print("[+] 读取{"+excel_file_path+"}成功")
     except Exception as e:
-        print(f"读取Excel文件时出错: {e}")
+        print(f"[-] 读取Excel文件时出错: {e}")
         return pd.DataFrame()
 
     # 获取漏洞名称
-    vulnerability_name = result.get('任务信息', {}).get('漏洞名称')
+    vulnerability_name = result.get('测试目标', {}).get('漏洞名称')
     if not vulnerability_name:
-        print("未找到漏洞名称")
+        print("[-] 未找到漏洞名称，请到{"+excel_file_path+"}中检查漏洞名称是否相同！")
         return pd.DataFrame()
 
     # 在Excel文件中查找漏洞名称
@@ -134,8 +136,8 @@ def find_vulnerability_in_excel(result, excel_file_path):
         matching_rows = df[df['漏洞名称'] == vulnerability_name]
 
         if not matching_rows.empty:
-            print(f"[+]找到 {len(matching_rows)} 条匹配记录")
-            print("[+]匹配到 *"+vulnerability_name+"* 漏洞")
+            print(f"[+] 找到 {len(matching_rows)} 条匹配记录")
+            print("[+] 匹配到 **"+vulnerability_name+"** 漏洞")
             # 提取威胁描述和解决方案字段
             threat_description = matching_rows['威胁描述'].iloc[0] if '威胁描述' in matching_rows.columns else ''
             solution = matching_rows['解决方案'].iloc[0] if '解决方案' in matching_rows.columns else ''
@@ -145,11 +147,11 @@ def find_vulnerability_in_excel(result, excel_file_path):
             if '漏洞详情' in result:
                 result['漏洞详情']['威胁描述'] = threat_description
                 result['漏洞详情']['解决方案'] = solution
-                print("[+]已将威胁描述和解决方案添加到结果中")
+                print("[+] 已将威胁描述和解决方案添加到结果中")
 
             return matching_rows
         else:
-            print(f"未找到漏洞名称为 '{vulnerability_name}' 的记录")
+            print(f"[-] 未找到漏洞名称为 '{vulnerability_name}' 的记录")
 
 
     return pd.DataFrame()
@@ -218,7 +220,7 @@ def replace_in_word_template(template_path, output_path, replacements):
                     # 标准化路径格式
                     normalized_path = os.path.normpath(decoded_path)
                     processed_paths.append(normalized_path)
-                    print("[+]读取图片成功 "+normalized_path)
+                    print("[+] 读取图片成功 "+normalized_path)
                 except Exception as e:
                     print(f"[-] 路径处理失败: {raw_path} ({str(e)})")
 
