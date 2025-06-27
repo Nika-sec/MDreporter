@@ -26,7 +26,6 @@ Sec-Fetch-Mode: cors
 Sec-Fetch-Site: same-origin
 Te: trailers
 Connection: keep-alive
-
 ```
 
 1.未授权访问
@@ -41,4 +40,4 @@ Connection: keep-alive
 
 ### 笔记
 
-不会被输出
+不会被输出(will not print)
