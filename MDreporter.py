@@ -1,6 +1,3 @@
-### Author
-
-
 import re
 import pandas as pd
 from docx import Document
@@ -18,7 +15,7 @@ def read_md_file(file_path):
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
             print("[+] 读取{"+file_path+"}成功")
-            #print(content)
+            # print(content)
             return content
     except Exception as e:
         print(f"[-] 读取文件失败: {str(e)}")
@@ -28,7 +25,7 @@ def read_md_file(file_path):
 def parse_md_string(md_string):
     # 初始化结果字典
     result = {
-        '测试目标': {
+        '任务信息': {
             '公司名称': '',
             '系统名称': '',
             '域名': '',
@@ -50,12 +47,14 @@ def parse_md_string(md_string):
 
     # 处理每个部分
     for section in sections:
+        #print(section)
         lines = section.split('\n')
         title = lines[0].strip()
+        #print(title)
         content = '\n'.join(lines[1:]).strip()
 
-        if title == '测试目标':
-            print("[+] 开始读取测试目标")
+        if title == '任务信息':
+            print("[+] 开始读取任务信息")
             # 提取表格内容
             table_pattern = r'\|\s*(.*?)\s*\|\s*(.*?)\s*\|'
             matches = re.findall(table_pattern, content)
@@ -64,11 +63,11 @@ def parse_md_string(md_string):
                     if value == '':
                         print("[-] "+key+'缺失')
                     #print(key+":"+value)
-                    result['测试目标'][key] = value
+                    result['任务信息'][key] = value
 
 
 
-        elif title == result.get('测试目标', {}).get('漏洞名称'):
+        elif title == result.get('任务信息', {}).get('漏洞名称'):
             print("[+] 正在读取漏洞复现过程")
             # 提取URL内容（标题后的第一部分文本）
             code_block = ''
@@ -104,7 +103,7 @@ def parse_md_string(md_string):
             if result['漏洞详情']['数据包'] != '' and result['漏洞详情']['复现过程']:
                 print("[+] 读取到数据包和复现过程")
 
-    #print(result)
+    print(result)
     return result
 
 
@@ -113,7 +112,7 @@ def find_vulnerability_in_excel(result, excel_file_path):
     在Excel文件中查找漏洞名称并返回对应行的内容
 
     参数:
-    result (dict): 包含测试目标的字典，通过parse_md_string函数生成
+    result (dict): 包含任务信息的字典，通过parse_md_string函数生成
     excel_file_path (str): Excel文件的路径
 
     返回:
@@ -128,7 +127,7 @@ def find_vulnerability_in_excel(result, excel_file_path):
         return pd.DataFrame()
 
     # 获取漏洞名称
-    vulnerability_name = result.get('测试目标', {}).get('漏洞名称')
+    vulnerability_name = result.get('任务信息', {}).get('漏洞名称')
     if not vulnerability_name:
         print("[-] 未找到漏洞名称，请到{"+excel_file_path+"}中检查漏洞名称是否相同！")
         return pd.DataFrame()
@@ -396,12 +395,13 @@ def main():
         # 原有业务逻辑
         md_content = read_md_file(args.md_file_path)
         md_result = parse_md_string(md_content)
+        #print(md_result)
         find_vulnerability_in_excel(md_result, xls_file_path)
         word_replacements = flatten_dict(md_result)
         word_output_file = word_replacements['{公司名称}'] + word_replacements['{系统名称}'] + "存在" + word_replacements['{漏洞名称}'] + ".docx"
         word_output_file = os.path.join(report_dir, word_output_file)
         replace_in_word_template(word_template_path, word_output_file, word_replacements)
-
+        #
         print(f"报告生成成功：{word_output_file}")
 
     except Exception as e:
