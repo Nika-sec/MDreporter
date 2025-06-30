@@ -6,6 +6,8 @@ import os
 import urllib.parse
 import argparse
 import json
+from datetime import datetime
+
 
 def read_md_file(file_path):
     try:
@@ -57,7 +59,13 @@ def parse_md_string(md_string):
             table_pattern = r'\|\s*(.*?)\s*\|\s*(.*?)\s*\|'
             matches = re.findall(table_pattern, content)
             for key, value in matches:
-                if key in ['公司名称', '系统名称', '域名', '漏洞名称', '漏洞URL', '危害级别', '日期', '测试人员']:
+                if key == '日期' and value == '':
+                    # 获取当前时间
+                    now = datetime.now()
+                    date = f"{now.year}年{now.month}月{now.day}日"
+                    print(f"[-] 日期缺失，默认为{date}")
+                    result['任务信息']['日期'] = date
+                if key in ['公司名称', '系统名称', '域名', '漏洞名称', '漏洞URL', '危害级别', '测试人员']:
                     if value == '':
                         print("[-] "+key+'缺失')
                     #print(key+":"+value)
