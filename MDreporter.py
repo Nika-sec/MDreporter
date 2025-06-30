@@ -8,9 +8,7 @@ import argparse
 import json
 
 def read_md_file(file_path):
-
     try:
-
         # 使用UTF-8编码打开文件
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
@@ -103,7 +101,7 @@ def parse_md_string(md_string):
             if result['漏洞详情']['数据包'] != '' and result['漏洞详情']['复现过程']:
                 print("[+] 读取到数据包和复现过程")
 
-    print(result)
+    # print(result)
     return result
 
 
@@ -376,10 +374,11 @@ def main():
     args = parser.parse_args()
 
     try:
+
         # 定义报告目录（使用绝对路径更可靠）
-        report_dir = os.path.abspath('report')  # 关键修复点1：转换为绝对路径
+        report_dir = os.path.abspath('report')  # 转换为绝对路径
         os.makedirs(report_dir, exist_ok=True)  # 确保目录存在
-        # 读取配置文件
+        # 验证配置文件存在并且读取
         config = read_config()
         xls_file_path = config['xls_file_path']
         word_template_path = config['word_template_path']
@@ -393,13 +392,18 @@ def main():
             raise FileNotFoundError(f"Word 模板文件 {word_template_path} 不存在")
 
         # 原有业务逻辑
+        # 1、读取MD文件
         md_content = read_md_file(args.md_file_path)
+        # 2、处理MD文件中信息
         md_result = parse_md_string(md_content)
         #print(md_result)
+        # 3、在excel中查找漏洞描述以及解决方案
         find_vulnerability_in_excel(md_result, xls_file_path)
+        # 4、另存为word模板
         word_replacements = flatten_dict(md_result)
         word_output_file = word_replacements['{公司名称}'] + word_replacements['{系统名称}'] + "存在" + word_replacements['{漏洞名称}'] + ".docx"
         word_output_file = os.path.join(report_dir, word_output_file)
+        # 5、写入另存为word模板中
         replace_in_word_template(word_template_path, word_output_file, word_replacements)
         #
         print(f"报告生成成功：{word_output_file}")
