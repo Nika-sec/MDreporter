@@ -28,15 +28,9 @@ Te: trailers
 Connection: keep-alive
 ```
 
-1.未授权访问
 
-![](C:\Users\wl\Pictures\desktop.jpg)
 
-2.未授权操作
-
-<img src="file:///C:/Users/wl/Pictures/desktop.jpg" title="" alt="" width="668">
-
-### 横向短信轰炸
+### 短信轰炸
 
 ```
 POST /admin/getVcodeForEdit HTTP/1.1
@@ -52,6 +46,7 @@ Sec-Fetch-Mode: cors
 Sec-Fetch-Site: same-origin
 Te: trailers
 Connection: keep-alive
+{"userId":"1123","oldTel":"13888888888","newTel":"13666666666","communityId":123}
 ```
 
 1.短信验证码发送接口
